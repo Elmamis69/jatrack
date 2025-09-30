@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: jatrack_db
+    environment:
+      POSTGRES_USER: jatrack
+      POSTGRES_PASSWORD: jatrack
+      POSTGRES_DB: jatrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+volumes:
+  dbdata:
