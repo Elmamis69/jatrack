@@ -9,6 +9,10 @@ export type Application = {
   notes?: string;
 };
 
+export const STATUS_OPTIONS: Application['status'][] = [
+  'APPLIED','HR_SCREEN','TECH_TEST','INTERVIEW','OFFER','REJECTED'
+];
+
 const BASE_URL = 'http://localhost:8080/api';
 
 export async function listApplications(): Promise<Application[]> {
@@ -24,6 +28,16 @@ export async function createApplication(a: Application): Promise<Application> {
     body: JSON.stringify(a),
   });
   if (!res.ok) throw new Error('Failed to create application');
+  return res.json();
+}
+
+export async function updateApplication(id: number, a: Application): Promise<Application> {
+  const res = await fetch(`${BASE_URL}/applications/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(a),
+  });
+  if (!res.ok) throw new Error('Failed to update application');
   return res.json();
 }
 
