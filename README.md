@@ -19,3 +19,17 @@ JATrack helps you manage your job applications, track statuses, and keep notes i
 1. Clone the repository:
    ```bash
    git clone https://github.com/Elmamiss69/jatrack.git
+
+   ## Roadmap
+
+- [x] Initialize repository with README and MIT License
+- [ ] Setup backend with Spring Boot and PostgreSQL
+- [ ] Create REST API for job applications (CRUD)
+- [ ] Setup frontend with React + TypeScript
+- [ ] Connect frontend with backend API
+- [ ] Add authentication (JWT)
+- [ ] Add filtering and search for applications
+- [ ] Add Kanban-style dashboard for application stages
+- [ ] Export applications to CSV/PDF
+- [ ] Deploy backend (Render/Heroku) and frontend (Vercel/Netlify)
+
