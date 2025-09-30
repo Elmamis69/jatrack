@@ -18,8 +18,21 @@ public class ApplicationController {
     }
 
     @GetMapping
-    public List<Application> all() {
-        return repo.findAll();
+    public PageResponse<Application> search(
+            @RequestParam(required = false) ApplicationStatus status,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "appliedDate,desc") String sort) {
+        var parts = sort.split(",", 2);
+        var sortObj = (parts.length == 2 && "desc".equalsIgnoreCase(parts[1]))
+                ? org.springframework.data.domain.Sort.by(parts[0]).descending()
+                : org.springframework.data.domain.Sort.by(parts[0]).ascending();
+
+        var pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
+        var pageData = repo.search(status, q, pageable);
+
+        return PageResponse.of(pageData);
     }
 
     @PostMapping
@@ -33,7 +46,7 @@ public class ApplicationController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
- 
+
     @PutMapping("/{id}")
     public ResponseEntity<Application> update(@PathVariable Long id, @Valid @RequestBody Application upd) {
         return repo.findById(id)
