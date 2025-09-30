@@ -24,7 +24,7 @@ JATrack helps you manage your job applications, track statuses, and keep notes i
 ## Roadmap
 - [x] Initialize repository with README and MIT License
 - [x] Setup backend with Spring Boot and PostgreSQL
-- [ ] Create REST API for job applications (CRUD)
+- [x] Create REST API for job applications (CRUD)
 - [ ] Setup frontend with React + TypeScript
 - [ ] Connect frontend with backend API
 - [ ] Add authentication (JWT)
