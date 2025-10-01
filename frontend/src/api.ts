@@ -69,5 +69,23 @@ export async function searchApplications(
 
   const res = await fetch(`${BASE_URL}/applications?${qs.toString()}`);
   if (!res.ok) throw new Error('Failed to search applications');
-  return res.json();
+
+  const data = await res.json();
+
+  // 👇 Compatibilidad: si el backend devuelve un array simple
+  if (Array.isArray(data)) {
+    return {
+      content: data,
+      page: 0,
+      size: data.length,
+      totalElements: data.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+    };
+  }
+
+  // Si ya es PageResponse, lo devolvemos tal cual
+  return data;
 }
+

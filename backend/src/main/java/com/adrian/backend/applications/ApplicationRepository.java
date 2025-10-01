@@ -9,18 +9,21 @@ import org.springframework.data.repository.query.Param;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
     @Query("""
-        SELECT a FROM Application a
-        WHERE (:status IS NULL OR a.status = :status)
-          AND (
-                :q IS NULL
-             OR LOWER(a.company)      LIKE LOWER(CONCAT('%', :q, '%'))
-             OR LOWER(a.roleTitle)    LIKE LOWER(CONCAT('%', :q, '%'))
-             OR LOWER(COALESCE(a.notes, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-             OR LOWER(COALESCE(a.contactEmail, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-          )
-        """)
+              SELECT a FROM Application a
+              WHERE (:status IS NULL OR a.status = :status)
+                AND (
+                     :q IS NULL
+                  OR lower(a.company)        LIKE lower(:qp)
+                  OR lower(a.roleTitle)      LIKE lower(:qp)
+                  OR lower(coalesce(a.notes, ''))         LIKE lower(:qp)
+                  OR lower(coalesce(a.contactEmail, ''))  LIKE lower(:qp)
+                  OR lower(coalesce(a.jobUrl, ''))        LIKE lower(:qp)
+                )
+            """)
     Page<Application> search(
             @Param("status") ApplicationStatus status,
-            @Param("q") String q,
+            @Param("q") String q, // solo para el check de null
+            @Param("qp") String qp, // patrón ya con %...%
             Pageable pageable);
+
 }

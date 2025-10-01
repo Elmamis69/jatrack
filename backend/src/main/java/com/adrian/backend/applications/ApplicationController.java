@@ -30,8 +30,17 @@ public class ApplicationController {
                 : org.springframework.data.domain.Sort.by(parts[0]).ascending();
 
         var pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
-        var pageData = repo.search(status, q, pageable);
 
+        // 👉 Si no hay filtros, evita la query compleja
+        boolean noFilters = (status == null) && (q == null || q.isBlank());
+        if (noFilters) {
+            var pageData = repo.findAll(pageable);
+            return PageResponse.of(pageData);
+        }
+
+        // 👉 Pasa el patrón ya armado; si q es null no se usa, pero manda algo seguro
+        String qp = (q == null || q.isBlank()) ? "%" : "%" + q + "%";
+        var pageData = repo.search(status, q, qp, pageable);
         return PageResponse.of(pageData);
     }
 
