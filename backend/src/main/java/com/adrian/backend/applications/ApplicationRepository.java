@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
-
+ 
     @Query("""
               SELECT a FROM Application a
               WHERE (:status IS NULL OR a.status = :status)

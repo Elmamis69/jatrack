@@ -16,7 +16,7 @@ public class ApplicationController {
     public ApplicationController(ApplicationRepository repo) {
         this.repo = repo;
     }
-
+ 
     @GetMapping
     public PageResponse<Application> search(
             @RequestParam(required = false) ApplicationStatus status,
