@@ -22,7 +22,7 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
-
+ 
     public String generate(String subject) {
         var now = new Date();
         var exp = new Date(now.getTime() + expirationMs);
