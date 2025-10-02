@@ -2,9 +2,13 @@ package com.adrian.backend.auth;
 
 import com.adrian.backend.auth.dto.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+//import org.springframework.security.core.annotation.AuthenticationPrincipal;
+//import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+//  imports que faltaban
+import java.util.Map;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,8 +30,14 @@ public class AuthController {
         return ResponseEntity.ok(auth.login(req));
     }
 
+    //  Usa un SOLO /me para diagnosticar autenticación
     @GetMapping("/me")
-    public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails ud) {
-        return ResponseEntity.ok(ud == null ? null : ud.getUsername());
+    public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
+        Map<String, Object> body = Map.of(
+                "name", authentication != null ? authentication.getName() : null,
+                "principal", authentication != null ? authentication.getPrincipal() : null,
+                "authorities", authentication != null ? authentication.getAuthorities() : null
+        );
+        return ResponseEntity.ok(body);
     }
 }

@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 
 export default function Applications() {
   const { logout } = useAuth();
+
   const [apps, setApps] = useState<Application[]>([]);
   const [page, setPage] = useState(0);
   const [size] = useState(10);
@@ -15,20 +16,53 @@ export default function Applications() {
   const [query, setQuery] = useState<string>("");
   const [sort, setSort] = useState<string>("appliedDate,desc");
 
+  // flag simple de carga
+  const [loading, setLoading] = useState(true);
+
   async function refresh(p = page) {
-    const data = await listApplications({ page: p, size, status, query, sort });
-    // si tu backend a veces devuelve arreglo plano (sin Page), soportamos ambos
-    if (Array.isArray(data)) {
-      setApps(data); setTotalPages(1);
-    } else {
-      setApps(data.content);
-      setTotalPages(data.totalPages);
+    const token = localStorage.getItem("token");
+
+    //  Si aún no hay token, reintenta en breve (evita GET sin auth)
+    if (!token) {
+      setLoading(true);
+      setTimeout(() => refresh(p), 200);
+      return;
+    }
+ 
+    try {
+      setLoading(true);
+      const data = await listApplications({ page: p, size, status, query, sort });
+      if (Array.isArray(data)) {
+        setApps(data);
+        setTotalPages(1);
+      } else {
+        setApps(data.content);
+        setTotalPages(data.totalPages);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   }
 
-  useEffect(() => { refresh(0); /* reset page al cambiar filtros */ }, [status, query, sort]);
+  // carga inicial una vez haya token
+  useEffect(() => {
+    if (!localStorage.getItem("token")) return;
+    refresh(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // cuando cambian filtros/sort, refresca desde la página 0… pero solo si hay token
+  useEffect(() => {
+    if (!localStorage.getItem("token")) return;
+    refresh(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, query, sort]);
 
   async function handleAdd() {
+    const token = localStorage.getItem("token");
+    if (!token) return; // por seguridad
     const today = new Date().toISOString().slice(0, 10);
     await createApplication({
       company: "Example Inc",
@@ -43,6 +77,8 @@ export default function Applications() {
   }
 
   async function handleDelete(id: number) {
+    const token = localStorage.getItem("token");
+    if (!token) return; // por seguridad
     await deleteApplication(id);
     await refresh(page);
   }
@@ -50,12 +86,22 @@ export default function Applications() {
   const disabledPrev = useMemo(() => page <= 0, [page]);
   const disabledNext = useMemo(() => page >= totalPages - 1, [page, totalPages]);
 
+  // UI mínima mientras aún no hay token o estamos cargando
+  if (!localStorage.getItem("token")) {
+    return (
+      <div style={{ padding: 16, maxWidth: 1040, margin: "0 auto" }}>
+        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <h2>JATrack – Applications</h2>
+          <button onClick={logout}>Logout</button>
+        </header>
+        <div>Preparando sesión…</div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: 16, maxWidth: 1040, margin: "0 auto" }}>
-      <header style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginBottom: 16
-      }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <h2>JATrack – Applications</h2>
         <button onClick={logout}>Logout</button>
       </header>
@@ -74,7 +120,7 @@ export default function Applications() {
           <option value="appliedDate,desc">Date ↓</option>
           <option value="appliedDate,asc">Date ↑</option>
         </select>
-        <button onClick={handleAdd}>+ Quick add</button>
+        <button onClick={handleAdd} disabled={loading}>+ Quick add</button>
       </div>
 
       {/* Tabla */}
@@ -90,7 +136,9 @@ export default function Applications() {
             </tr>
           </thead>
           <tbody>
-            {apps.length === 0 ? (
+            {loading ? (
+              <tr><td colSpan={5} style={{ padding: 12, textAlign: "center" }}>Loading…</td></tr>
+            ) : apps.length === 0 ? (
               <tr><td colSpan={5} style={{ padding: 12, textAlign: "center" }}>No records</td></tr>
             ) : apps.map(a => (
               <tr key={a.id!}>
@@ -99,7 +147,7 @@ export default function Applications() {
                 <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{a.status}</td>
                 <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{a.appliedDate}</td>
                 <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>
-                  <button onClick={() => handleDelete(a.id!)}>Delete</button>
+                  <button onClick={() => handleDelete(a.id!)} disabled={loading}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -109,9 +157,19 @@ export default function Applications() {
 
       {/* Paginación */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
-        <button disabled={disabledPrev} onClick={() => { setPage((p) => Math.max(0, p - 1)); refresh(page - 1); }}>Prev</button>
+        <button
+          disabled={loading || disabledPrev}
+          onClick={() => { const p = Math.max(0, page - 1); setPage(p); refresh(p); }}
+        >
+          Prev
+        </button>
         <span>Page {page + 1} / {Math.max(1, totalPages)}</span>
-        <button disabled={disabledNext} onClick={() => { setPage((p) => p + 1); refresh(page + 1); }}>Next</button>
+        <button
+          disabled={loading || disabledNext}
+          onClick={() => { const p = page + 1; setPage(p); refresh(p); }}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

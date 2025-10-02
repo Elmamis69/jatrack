@@ -79,7 +79,8 @@ public class JwtService {
     private SecretKey getSignInKey() {
         // Si tu secreto está en Base64, usa Decoders.BASE64.decode(secret)
         byte[] keyBytes;
-        // Heurística sencilla: si luce base64 (A–Z, a–z, 0–9, +, /, =) y longitud múltiplo de 4, decodifica
+        // Heurística sencilla: si luce base64 (A–Z, a–z, 0–9, +, /, =) y longitud
+        // múltiplo de 4, decodifica
         if (secret.matches("^[A-Za-z0-9+/=]+$") && secret.length() % 4 == 0) {
             keyBytes = Decoders.BASE64.decode(secret);
         } else {
@@ -90,4 +91,18 @@ public class JwtService {
         }
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    // JwtService.java
+    public String generate(String email) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + expirationMs);
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
 }

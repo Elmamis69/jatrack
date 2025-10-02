@@ -1,14 +1,19 @@
-package com.adrian.backend.applications;
+package com.adrian.backend.controllers;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.adrian.backend.applications.Application;
+import com.adrian.backend.applications.ApplicationRepository;
+import com.adrian.backend.applications.ApplicationStatus;
+import com.adrian.backend.applications.PageResponse;
 
+//import java.util.List;
+@PreAuthorize("isAuthenticated()")
 @RestController
 @RequestMapping("/api/applications")
-@CrossOrigin(origins = "*")
 public class ApplicationController {
 
     private final ApplicationRepository repo;
