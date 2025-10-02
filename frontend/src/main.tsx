@@ -1,10 +1,23 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { AuthProvider, Private } from "./auth/AuthContext";
+import Applications from "./pages/Applications";
+import Login from "./pages/Login";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+function Router() {
+  const path = window.location.pathname;
+  if (path === "/login") return <Login />;
+  return (
+    <Private>
+      <Applications />
+    </Private>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <AuthProvider>
+      <Router />
+    </AuthProvider>
+  </React.StrictMode>
+);
