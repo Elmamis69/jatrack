@@ -28,7 +28,7 @@ export default function Applications() {
       setTimeout(() => refresh(p), 200);
       return;
     }
- 
+  
     try {
       setLoading(true);
       const data = await listApplications({ page: p, size, status, query, sort });

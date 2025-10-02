@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/applications/**").authenticated() // o hasRole("USER")
                         .anyRequest().authenticated())
-
+ 
                 .exceptionHandling(e -> e.accessDeniedHandler((request, response, ex) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json");

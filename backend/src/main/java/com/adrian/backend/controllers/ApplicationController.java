@@ -42,7 +42,7 @@ public class ApplicationController {
             var pageData = repo.findAll(pageable);
             return PageResponse.of(pageData);
         }
-
+ 
         // 👉 Pasa el patrón ya armado; si q es null no se usa, pero manda algo seguro
         String qp = (q == null || q.isBlank()) ? "%" : "%" + q + "%";
         var pageData = repo.search(status, q, qp, pageable);

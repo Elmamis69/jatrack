@@ -2,7 +2,7 @@ package com.adrian.backend.applications;
 
 import org.springframework.data.domain.Page;
 import java.util.List;
-
+ 
 public record PageResponse<T>(
         List<T> content,
         int page,
