@@ -2,7 +2,9 @@ package com.adrian.backend.auth;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,34 +18,41 @@ import java.io.IOException;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final CustomUserDetailsService uds;
+    private final CustomUserDetailsService userDetailsService;
 
-    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService uds) {
+    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
-        this.uds = uds;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String header = req.getHeader("Authorization");
-        String username = null;
-        String token = null;
-
-        if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7);
-            try { username = jwtService.extractUsername(token); } catch (Exception ignored) {}
+        final String authHeader = request.getHeader("Authorization"); // 👈 exacto
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response); // 👈 no hay token → sigue
+            return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails ud = uds.loadUserByUsername(username);
-            if (jwtService.isValid(token, ud.getUsername())) {
-                var auth = new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+        final String jwt = authHeader.substring(7);
+        String email = jwtService.extractUsername(jwt); // o extractEmail
+
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        chain.doFilter(req, res);
+
+        // 👇 SIEMPRE pasar al siguiente filtro
+        filterChain.doFilter(request, response);
     }
 }

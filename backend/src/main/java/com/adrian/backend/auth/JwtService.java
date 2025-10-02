@@ -1,55 +1,93 @@
 package com.adrian.backend.auth;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
+import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class JwtService {
 
-    private final Key key;
-    private final long expirationMs;
+    @Value("${app.jwt.secret}")
+    private String secret; // debe ser >= 32 bytes para HS256
 
-    public JwtService(
-            @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs
-    ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMs = expirationMs;
+    @Value("${app.jwt.expiration-ms:86400000}")
+    private long expirationMs;
+
+    // -------------------- Public API --------------------
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
     }
- 
-    public String generate(String subject) {
-        var now = new Date();
-        var exp = new Date(now.getTime() + expirationMs);
+
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(Map.of(), userDetails);
+    }
+
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + expirationMs);
+
         return Jwts.builder()
-                .setSubject(subject)
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(exp)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().getSubject();
+    /** Firma esperada: token + UserDetails */
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
-    public boolean isValid(String token, String username) {
-        try {
-            return username.equals(extractUsername(token)) && !isExpired(token);
-        } catch (JwtException e) {
-            return false;
+    // -------------------- Internals --------------------
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private SecretKey getSignInKey() {
+        // Si tu secreto está en Base64, usa Decoders.BASE64.decode(secret)
+        byte[] keyBytes;
+        // Heurística sencilla: si luce base64 (A–Z, a–z, 0–9, +, /, =) y longitud múltiplo de 4, decodifica
+        if (secret.matches("^[A-Za-z0-9+/=]+$") && secret.length() % 4 == 0) {
+            keyBytes = Decoders.BASE64.decode(secret);
+        } else {
+            keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         }
-    }
-
-    private boolean isExpired(String token) {
-        var exp = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().getExpiration();
-        return exp.before(new Date());
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes for HS256");
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
