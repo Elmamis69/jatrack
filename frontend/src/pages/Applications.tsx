@@ -34,7 +34,7 @@ export default function Applications() {
         page: p,
         size,
         status: status || undefined,
-        query: debouncedQuery || undefined,
+        q: debouncedQuery || undefined,
         sort,
       });
 

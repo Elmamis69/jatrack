@@ -83,17 +83,13 @@ export type Page<T> = {
    Applications CRUD
 =========================== */
 export async function listApplications(params?: {
-  page?: number;
-  size?: number;
-  status?: string;
-  query?: string;
-  sort?: string; // p.ej. "appliedDate,desc"
+  page?: number; size?: number; status?: string; q?: string; sort?: string;
 }): Promise<Page<Application> | Application[]> {
   const q = new URLSearchParams();
   if (params?.page !== undefined) q.set("page", String(params.page));
   if (params?.size !== undefined) q.set("size", String(params.size));
   if (params?.status) q.set("status", params.status);
-  if (params?.query) q.set("query", params.query);
+  if (params?.q) q.set("q", params.q);
   if (params?.sort) q.set("sort", params.sort);
 
   const url = "/api/applications" + (q.toString() ? `?${q.toString()}` : "");
