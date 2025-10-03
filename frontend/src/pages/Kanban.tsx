@@ -53,19 +53,33 @@ export default function Kanban() {
     setDraggingId(null);
     if (!id) return;
 
-    // Optimistic UI
+    // Busca la tarjeta actual
+    const card = items.find(a => a.id === id);
+    if (!card) return;
+
+    // Optimistic UI (mover en la UI primero)
     const prev = items;
     const next = items.map(a => (a.id === id ? { ...a, status: newStatus } : a));
     setItems(next);
 
     try {
-      await updateApplication(id, { status: newStatus });
+      // 👇 Enviar el objeto completo (no sólo status)
+      await updateApplication(id, {
+        company: card.company,
+        roleTitle: card.roleTitle,
+        status: newStatus,
+        appliedDate: card.appliedDate,     // asegúrate que no sea undefined
+        contactEmail: card.contactEmail ?? "",
+        jobUrl: card.jobUrl ?? "",
+        notes: card.notes ?? "",
+      });
     } catch (err) {
-      console.error(err);
+      console.error("PUT /api/applications failed:", err);
       setItems(prev); // revertir si falla
       alert("No se pudo actualizar el estado");
     }
   }
+
 
   function goList() {
     window.location.href = "/"; // sin router: volver al listado
@@ -92,33 +106,33 @@ export default function Kanban() {
         }}>
           {COLUMNS.map(col => (
             <div key={col}
-                 onDragOver={onDragOver}
-                 onDrop={(e) => onDrop(e, col)}
-                 style={{
-                   border: "1px solid #e5e7eb",
-                   borderRadius: 10,
-                   background: "#fafafa",
-                   padding: 8,
-                   minHeight: 300
-                 }}>
+              onDragOver={onDragOver}
+              onDrop={(e) => onDrop(e, col)}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: 10,
+                background: "#fafafa",
+                padding: 8,
+                minHeight: 300
+              }}>
               <div style={{ fontWeight: 700, marginBottom: 8 }}>{col}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {grouped[col].map(card => (
                   <div key={card.id}
-                       draggable
-                       onDragStart={(e) => onDragStart(e, card.id!)}
-                       style={{
-                         background: "#fff",
-                         border: "1px solid #eee",
-                         borderRadius: 8,
-                         padding: 8,
-                         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                         cursor: "grab"
-                       }}>
+                    draggable
+                    onDragStart={(e) => onDragStart(e, card.id!)}
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #eee",
+                      borderRadius: 8,
+                      padding: 8,
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                      cursor: "grab"
+                    }}>
                     <div style={{ fontWeight: 600 }}>{card.company}</div>
                     <div style={{ fontSize: 12, color: "#555" }}>{card.roleTitle}</div>
                     <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>
-                      {card.appliedDate}
+                      appliedDate: card.appliedDate ?? new Date().toISOString().slice(0,10),
                     </div>
                   </div>
                 ))}
