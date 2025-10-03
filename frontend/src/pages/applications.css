@@ -64,7 +64,17 @@
 }
 .btn:hover { background: #f6f6f6; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
+.btn1{
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #298340;
+  cursor: pointer;
+  color: #fff;
+}
+.btn1:hover { background: #f6f6f6; }
+.btn1:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn--primary {
   border-color: #0d6efd;
   background: #0d6efd;

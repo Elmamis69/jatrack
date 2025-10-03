@@ -5,7 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useDebounce } from "../utils/useDebounce";
 import { buildCsv, downloadCsv, type ColumnDef } from "../utils/csv";
 import { exportTablePdf, type PdfColumn } from "../utils/pdf";
-import "./applications.css"; // 👈 nuevo
+import "./applications.css"; //  nuevo
 
 export default function Applications() {
   const { logout } = useAuth();
@@ -195,7 +195,7 @@ export default function Applications() {
         <button className="btn" onClick={handleAdd} disabled={loading}>+ Quick add</button>
 
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="btn" onClick={onExportCsv} disabled={loading}>Export CSV</button>
+          <button className="btn1" onClick={onExportCsv} disabled={loading}>Export CSV</button>
           <button className="btn btn--primary" onClick={onExportPdf} disabled={loading}>Export PDF</button>
         </div>
       </div>
