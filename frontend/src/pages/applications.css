@@ -30,7 +30,7 @@
   display: grid;
   grid-template-columns: 1fr 160px 140px 120px auto auto;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 12px;
 }
 @media (max-width: 920px) {
@@ -239,4 +239,21 @@
   color: #b91c1c;
   font-size: 13px;
   margin-bottom: 6px;
+}
+/* Alto unificado para todos los controles de la toolbar */
+:root {
+  --control-h: 36px;
+}
+
+/* Inputs & selects */
+.input, .select {
+  height: var(--control-h);
+  padding: 6px 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+  box-sizing: border-box;
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import "./auth.css";
 
 export default function Login() {
   const { login, register } = useAuth();
@@ -8,47 +9,77 @@ export default function Login() {
   const [name, setName] = useState("Adrián");
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       if (mode === "login") await login(email, pass);
       else await register(name, email, pass);
-      window.location.href = "/"; // a Applications
+      window.location.href = "/"; // Applications
     } catch (err: any) {
       setError(err.message || "Error");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 380, margin: "80px auto", padding: 16, border: "1px solid #e5e5e5", borderRadius: 12 }}>
-      <h2 style={{ marginBottom: 16 }}>{mode === "login" ? "Sign in" : "Create account"}</h2>
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8 }}>
-        {mode === "register" && (
-          <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        )}
-        <input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input placeholder="Password" type="password" value={pass} onChange={(e) => setPass(e.target.value)} required />
-        {error && <div style={{ color: "crimson" }}>{error}</div>}
-        <button type="submit">{mode === "login" ? "Login" : "Register"}</button>
-      </form>
-      <div style={{ marginTop: 12 }}>
-        {mode === "login" ? (
-          <span>
-            No account?{" "}
-            <a href="#" onClick={() => setMode("register")}>
-              Register
-            </a>
-          </span>
-        ) : (
-          <span>
-            Have an account?{" "}
-            <a href="#" onClick={() => setMode("login")}>
-              Login
-            </a>
-          </span>
-        )}
+    <div className="authPage">
+      <div className="authCard">
+        <h1 className="authTitle">{mode === "login" ? "Sign in" : "Create account"}</h1>
+
+        <form className="authForm" onSubmit={handleSubmit}>
+          {mode === "register" && (
+            <input
+              className="authInput"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          )}
+          <input
+            className="authInput"
+            placeholder="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="authInput"
+            placeholder="Password"
+            type="password"
+            value={pass}
+            onChange={(e) => setPass(e.target.value)}
+            required
+          />
+
+          {error && <div className="authError">{error}</div>}
+
+          <button className="authBtn" type="submit" disabled={loading}>
+            {loading ? (mode === "login" ? "Signing in…" : "Creating…") : (mode === "login" ? "Login" : "Register")}
+          </button>
+        </form>
+
+        <div className="authLink">
+          {mode === "login" ? (
+            <>No account?{" "}
+              <a href="#" onClick={(e) => { e.preventDefault(); setMode("register"); }}>
+                Register
+              </a>
+            </>
+          ) : (
+            <>Have an account?{" "}
+              <a href="#" onClick={(e) => { e.preventDefault(); setMode("login"); }}>
+                Login
+              </a>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
