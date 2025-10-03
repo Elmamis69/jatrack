@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createApplication, deleteApplication, listApplications } from "../api";
 import type { Application } from "../api";
+import { STATUS_OPTIONS } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { useDebounce } from "../utils/useDebounce";
 import { buildCsv, downloadCsv, type ColumnDef } from "../utils/csv";
@@ -23,6 +24,69 @@ export default function Applications() {
   const [sort, setSort] = useState<string>("appliedDate,desc");
 
   const [loading, setLoading] = useState(true);
+
+  // --- estado modal Add ---
+  const [showAdd, setShowAdd] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  function initialDraft(): Partial<Application> {
+    return {
+      company: "",
+      roleTitle: "",
+      status: "APPLIED",
+      appliedDate: new Date().toISOString().slice(0, 10),
+      contactEmail: "",
+      jobUrl: "",
+      notes: "",
+    };
+  }
+  const [draft, setDraft] = useState<Partial<Application>>(initialDraft());
+
+  function openAdd() {
+    setDraft(initialDraft());
+    setFormError(null);
+    setShowAdd(true);
+  }
+  function closeAdd() {
+    if (saving) return;
+    setShowAdd(false);
+  }
+
+  function setDraftField<K extends keyof Application>(key: K, value: Application[K]) {
+    setDraft(d => ({ ...d, [key]: value }));
+  }
+
+  async function submitAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const company = (draft.company ?? "").trim();
+    const roleTitle = (draft.roleTitle ?? "").trim();
+    if (!company || !roleTitle) {
+      setFormError("Company and Role Title are required.");
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
+    try {
+      await createApplication({
+        company,
+        roleTitle,
+        status: (draft.status as string) || "APPLIED",
+        appliedDate: draft.appliedDate ?? new Date().toISOString().slice(0, 10),
+        contactEmail: draft.contactEmail ?? "",
+        jobUrl: draft.jobUrl ?? "",
+        notes: draft.notes ?? "",
+      });
+      setShowAdd(false);
+      await refresh(0, false);
+    } catch (err) {
+      console.error(err);
+      setFormError("Failed to create application. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
 
   async function refresh(p = page, keepPage = true) {
     const token = localStorage.getItem("token");
@@ -192,9 +256,10 @@ export default function Applications() {
           <option value={20}>20 / page</option>
         </select>
 
-        <button className="btn" onClick={handleAdd} disabled={loading}>+ Quick add</button>
+        <button className="btn3" onClick={handleAdd} disabled={loading}>+ Quick add</button>
 
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button className="btn2" onClick={openAdd} disabled={loading}>Add…</button>
           <button className="btn1" onClick={onExportCsv} disabled={loading}>Export CSV</button>
           <button className="btn btn--primary" onClick={onExportPdf} disabled={loading}>Export PDF</button>
         </div>
@@ -250,6 +315,110 @@ export default function Applications() {
           Next
         </button>
       </div>
+      {/* --- Modal Add Application --- */}
+      {showAdd && (
+        <div className="modalOverlay" onClick={closeAdd}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal__header">
+              <h3 className="modal__title">Add Application</h3>
+              <button className="btn" onClick={closeAdd} disabled={saving}>✕</button>
+            </div>
+
+            <form onSubmit={submitAdd}>
+              <div className="modal__body">
+                {formError && <div className="formError">{formError}</div>}
+
+                <div className="formGrid">
+                  <div>
+                    <label>Company</label>
+                    <input
+                      className="input"
+                      value={draft.company ?? ""}
+                      onChange={(e) => setDraftField("company", e.target.value)}
+                      placeholder="Company name"
+                    />
+                  </div>
+
+                  <div>
+                    <label>Role Title</label>
+                    <input
+                      className="input"
+                      value={draft.roleTitle ?? ""}
+                      onChange={(e) => setDraftField("roleTitle", e.target.value)}
+                      placeholder="e.g., Full Stack Developer"
+                    />
+                  </div>
+
+                  <div>
+                    <label>Status</label>
+                    <select
+                      className="select"
+                      value={(draft.status as string) ?? "APPLIED"}
+                      onChange={(e) => setDraftField("status", e.target.value as Application["status"])}
+                    >
+                      {STATUS_OPTIONS.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Applied Date</label>
+                    <input
+                      className="input"
+                      type="date"
+                      value={draft.appliedDate ?? ""}
+                      onChange={(e) => setDraftField("appliedDate", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label>Contact Email</label>
+                    <input
+                      className="input"
+                      type="email"
+                      value={draft.contactEmail ?? ""}
+                      onChange={(e) => setDraftField("contactEmail", e.target.value)}
+                      placeholder="hr@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label>Job URL</label>
+                    <input
+                      className="input"
+                      type="url"
+                      value={draft.jobUrl ?? ""}
+                      onChange={(e) => setDraftField("jobUrl", e.target.value)}
+                      placeholder="https://example.com/job"
+                    />
+                  </div>
+                </div>
+
+                <div className="formGrid formGrid--1col" style={{ marginTop: 10 }}>
+                  <div>
+                    <label>Notes</label>
+                    <textarea
+                      className="textarea"
+                      value={draft.notes ?? ""}
+                      onChange={(e) => setDraftField("notes", e.target.value)}
+                      placeholder="Extra details, contacts, reminders…"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal__actions">
+                <button type="button" className="btn" onClick={closeAdd} disabled={saving}>Cancel</button>
+                <button type="submit" className="btn btn--primary" disabled={saving}>
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

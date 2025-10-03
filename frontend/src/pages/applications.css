@@ -64,6 +64,7 @@
 }
 .btn:hover { background: #f6f6f6; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .btn1{
   height: 34px;
   padding: 0 12px;
@@ -75,9 +76,34 @@
 }
 .btn1:hover { background: #f6f6f6; }
 .btn1:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn2{
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #0b5ed7;
+  cursor: pointer;
+  color: #fff;
+}
+.btn2:hover { background: #f6f6f6; }
+.btn2:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn3{
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #0bb8d7;
+  cursor: pointer;
+  color: #fff;
+}
+.btn3:hover { background: #f6f6f6; }
+.btn3:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .btn--primary {
   border-color: #0d6efd;
-  background: #0d6efd;
+  background: #ca2121;
   color: #fff;
 }
 .btn--primary:hover {
@@ -141,4 +167,76 @@
   font-size: 12px;
   border: 1px solid #e5e7eb;
   background: #f8fafc;
+}
+/* --- Modal Add Application --- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  width: 560px;
+  max-width: 100%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 0 16px;
+}
+.modal__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.modal__body {
+  padding: 12px 16px 16px 16px;
+}
+.modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 0 16px 16px 16px;
+}
+
+/* Grid del form */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.formGrid--1col {
+  grid-template-columns: 1fr;
+}
+
+/* Textarea estilo similar a .input */
+.textarea {
+  min-height: 90px;
+  padding: 8px 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  resize: vertical;
+  font-family: inherit;
+}
+.textarea:focus {
+  border-color: #9ac1ff;
+  box-shadow: 0 0 0 3px rgba(0, 120, 255, 0.15);
+}
+
+/* Mensaje de error */
+.formError {
+  color: #b91c1c;
+  font-size: 13px;
+  margin-bottom: 6px;
 }
