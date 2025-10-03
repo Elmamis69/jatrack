@@ -321,7 +321,7 @@ export default function Applications() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal__header">
               <h3 className="modal__title">Add Application</h3>
-              <button className="btn" onClick={closeAdd} disabled={saving}>✕</button>
+              <button className="btn btn--icon" onClick={closeAdd} disabled={saving}>✕</button>
             </div>
 
             <form onSubmit={submitAdd}>
@@ -329,8 +329,8 @@ export default function Applications() {
                 {formError && <div className="formError">{formError}</div>}
 
                 <div className="formGrid">
-                  <div>
-                    <label>Company</label>
+                  <div className="field">
+                    <label className="field__label">Company</label>
                     <input
                       className="input"
                       value={draft.company ?? ""}
@@ -339,8 +339,8 @@ export default function Applications() {
                     />
                   </div>
 
-                  <div>
-                    <label>Role Title</label>
+                  <div className="field">
+                    <label className="field__label">Role Title</label>
                     <input
                       className="input"
                       value={draft.roleTitle ?? ""}
@@ -349,8 +349,8 @@ export default function Applications() {
                     />
                   </div>
 
-                  <div>
-                    <label>Status</label>
+                  <div className="field">
+                    <label className="field__label">Status</label>
                     <select
                       className="select"
                       value={(draft.status as string) ?? "APPLIED"}
@@ -362,8 +362,8 @@ export default function Applications() {
                     </select>
                   </div>
 
-                  <div>
-                    <label>Applied Date</label>
+                  <div className="field">
+                    <label className="field__label">Applied Date</label>
                     <input
                       className="input"
                       type="date"
@@ -372,8 +372,8 @@ export default function Applications() {
                     />
                   </div>
 
-                  <div>
-                    <label>Contact Email</label>
+                  <div className="field">
+                    <label className="field__label">Contact Email</label>
                     <input
                       className="input"
                       type="email"
@@ -383,8 +383,8 @@ export default function Applications() {
                     />
                   </div>
 
-                  <div>
-                    <label>Job URL</label>
+                  <div className="field">
+                    <label className="field__label">Job URL</label>
                     <input
                       className="input"
                       type="url"
@@ -393,11 +393,10 @@ export default function Applications() {
                       placeholder="https://example.com/job"
                     />
                   </div>
-                </div>
 
-                <div className="formGrid formGrid--1col" style={{ marginTop: 10 }}>
-                  <div>
-                    <label>Notes</label>
+                  {/* Notes ocupa las dos columnas */}
+                  <div className="field formGrid--1col" style={{ gridColumn: "1 / -1" }}>
+                    <label className="field__label">Notes</label>
                     <textarea
                       className="textarea"
                       value={draft.notes ?? ""}
@@ -415,6 +414,7 @@ export default function Applications() {
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}

@@ -187,58 +187,96 @@
   max-width: 100%;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
+/* ===== Modal: layout de formulario refinado ===== */
+
 .modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 0 16px;
+  padding: 16px;
 }
-.modal__title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
+
 .modal__body {
-  padding: 12px 16px 16px 16px;
+  padding: 0 16px 16px 16px;
 }
+
 .modal__actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  padding: 0 16px 16px 16px;
+  padding: 12px 16px 16px 16px;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
-/* Grid del form */
+/* Rejilla 2 columnas fluidas */
 .formGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.formGrid--1col {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;   /* separación horizontal */
+  row-gap: 12px;      /* separación vertical */
 }
 
-/* Textarea estilo similar a .input */
-.textarea {
-  min-height: 90px;
+.formGrid--1col { grid-template-columns: 1fr; }
+
+/* Field básico (label arriba + control 100%) */
+.field { width: 100%; }
+.field__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Forzamos altura y box-sizing consistente en el modal */
+.modal .input,
+.modal .select {
+  height: 38px;
   padding: 8px 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.modal .textarea {
+  min-height: 110px;
+  padding: 10px;
   border: 1px solid #dcdcdc;
   border-radius: 8px;
   outline: none;
   background: #fff;
   resize: vertical;
   font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  width: 100%;
 }
-.textarea:focus {
+
+.modal .input:focus,
+.modal .select:focus,
+.modal .textarea:focus {
   border-color: #9ac1ff;
   box-shadow: 0 0 0 3px rgba(0, 120, 255, 0.15);
 }
 
-/* Mensaje de error */
-.formError {
-  color: #b91c1c;
-  font-size: 13px;
-  margin-bottom: 6px;
+/* Botón de cerrar compacto en header */
+.btn--icon {
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
 }
 /* Alto unificado para todos los controles de la toolbar */
 :root {
