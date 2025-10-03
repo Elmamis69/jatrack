@@ -29,7 +29,7 @@ JATrack helps you manage your job applications, track statuses, and keep notes i
 - [x] Connect frontend with backend API
 - [x] Add authentication (JWT)
 - [x] Add filtering and search for applications
-- [ ] Add Kanban-style dashboard for application stages
+- [x] Add Kanban-style dashboard for application stages
 - [ ] Export applications to CSV/PDF
 - [ ] Deploy backend (Render/Heroku) and frontend (Vercel/Netlify)
 
