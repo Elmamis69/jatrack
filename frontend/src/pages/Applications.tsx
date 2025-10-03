@@ -3,9 +3,9 @@ import { createApplication, deleteApplication, listApplications } from "../api";
 import type { Application } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { useDebounce } from "../utils/useDebounce";
-import { buildCsv, downloadCsv, type ColumnDef } from "../utils/csv"; //  NUEVO
-// NUEVO import
+import { buildCsv, downloadCsv, type ColumnDef } from "../utils/csv";
 import { exportTablePdf, type PdfColumn } from "../utils/pdf";
+import "./applications.css"; // 👈 nuevo
 
 export default function Applications() {
   const { logout } = useAuth();
@@ -22,7 +22,6 @@ export default function Applications() {
   const debouncedQuery = useDebounce(query, 350);
   const [sort, setSort] = useState<string>("appliedDate,desc");
 
-  // flag simple de carga
   const [loading, setLoading] = useState(true);
 
   async function refresh(p = page, keepPage = true) {
@@ -57,14 +56,12 @@ export default function Applications() {
     }
   }
 
-  // carga inicial
   useEffect(() => {
     if (!localStorage.getItem("token")) return;
     refresh(0, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // cuando cambian filtros/sort/tamaño → ir a página 0
   useEffect(() => {
     if (!localStorage.getItem("token")) return;
     refresh(0, false);
@@ -103,7 +100,6 @@ export default function Applications() {
   const disabledPrev = useMemo(() => page <= 0, [page]);
   const disabledNext = useMemo(() => page >= totalPages - 1, [page, totalPages]);
 
-  // 👇 NUEVO: Export CSV de lo que el usuario está viendo (apps ya filtradas/paginadas)
   function onExportCsv() {
     const columns: ColumnDef<Application>[] = [
       { header: "ID", accessor: r => r.id ?? "" },
@@ -119,8 +115,8 @@ export default function Applications() {
     const yyyyMmDd = new Date().toISOString().slice(0, 10);
     downloadCsv(`applications_${yyyyMmDd}`, csv);
   }
+
   function onExportPdf() {
-    // columnas y mapeo de valores tal como en CSV
     const columns: PdfColumn<Application>[] = [
       { header: "ID", accessor: r => r.id ?? "", width: 16 },
       { header: "Company", accessor: r => r.company, width: 40 },
@@ -128,62 +124,55 @@ export default function Applications() {
       { header: "Status", accessor: r => r.status, width: 26 },
       { header: "Applied Date", accessor: r => r.appliedDate ?? "", width: 26 },
       { header: "Contact Email", accessor: r => r.contactEmail ?? "", width: 40 },
-      // Si la URL es larga, la recortamos para que envuelva mejor:
-      { header: "Job URL", accessor: r => (r.jobUrl ?? ""), width: 50 },
-      // Para Notes, quitamos saltos largos o dejamos que haga linebreak
-      { header: "Notes", accessor: r => (r.notes ?? ""), width: 60 },
+      { header: "Job URL", accessor: r => r.jobUrl ?? "", width: 50 },
+      { header: "Notes", accessor: r => r.notes ?? "", width: 60 },
     ];
-
     const yyyyMmDd = new Date().toISOString().slice(0, 10);
     exportTablePdf<Application>({
       rows: apps,
       columns,
       title: "Applications",
       fileName: `applications_${yyyyMmDd}`,
-      landscape: true, // más columnas = mejor en horizontal
+      landscape: true,
     });
   }
 
-
   if (!localStorage.getItem("token")) {
     return (
-      <div style={{ padding: 16, maxWidth: 1040, margin: "0 auto" }}>
-        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <h2>JATrack – Applications</h2>
-          <button onClick={logout}>Logout</button>
-        </header>
+      <div className="page">
+        <div className="page__header">
+          <h2 className="page__title">JATrack – Applications</h2>
+          <div className="page__actions">
+            <button className="btn" onClick={logout}>Logout</button>
+          </div>
+        </div>
         <div>Preparando sesión…</div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 1040, margin: "0 auto" }}>
-      <header style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginBottom: 16
-      }}>
-        <h2>JATrack – Applications</h2>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => (window.location.href = "/kanban")}
-            style={{ fontSize: "20px", fontWeight: "bold" }}
-          >
+    <div className="page">
+      <div className="page__header">
+        <h2 className="page__title">JATrack – Applications</h2>
+        <div className="page__actions">
+          <button className="btn btn--ghost" onClick={() => (window.location.href = "/kanban")}>
             Kanban
           </button>
-          <button onClick={logout}>Logout</button>
+          <button className="btn" onClick={logout}>Logout</button>
         </div>
-      </header>
+      </div>
 
-      {/* Filtros */}
-      <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 180px 160px 120px auto auto", marginBottom: 12 }}>
+      {/* Toolbar */}
+      <div className="toolbar">
         <input
+          className="input"
           placeholder="Search (company, role, notes…)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
 
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select className="select" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
           <option value="APPLIED">APPLIED</option>
           <option value="HR_SCREEN">HR_SCREEN</option>
@@ -193,33 +182,34 @@ export default function Applications() {
           <option value="REJECTED">REJECTED</option>
         </select>
 
-        <button onClick={toggleSort}>
+        <button className="btn" onClick={toggleSort}>
           {sort === "appliedDate,desc" ? "Date ↓" : "Date ↑"}
         </button>
 
-        <select value={size} onChange={(e) => setSize(parseInt(e.target.value, 10))}>
+        <select className="select" value={size} onChange={(e) => setSize(parseInt(e.target.value, 10))}>
           <option value={5}>5 / page</option>
           <option value={10}>10 / page</option>
           <option value={20}>20 / page</option>
         </select>
 
-        <button onClick={handleAdd} disabled={loading}>+ Quick add</button>
+        <button className="btn" onClick={handleAdd} disabled={loading}>+ Quick add</button>
 
-        {/*  NUEVO: Export CSV */}
-        <button onClick={onExportCsv} disabled={loading}>Export CSV</button>
-        <button onClick={onExportPdf} disabled={loading}>Export PDF</button>
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button className="btn" onClick={onExportCsv} disabled={loading}>Export CSV</button>
+          <button className="btn btn--primary" onClick={onExportPdf} disabled={loading}>Export PDF</button>
+        </div>
       </div>
 
       {/* Tabla */}
-      <div style={{ overflow: "auto", border: "1px solid #eee", borderRadius: 10 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "#fafafa" }}>
+      <div className="tableWrap">
+        <table className="table">
+          <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>Company</th>
-              <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>Role</th>
-              <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>Status</th>
-              <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>Date</th>
-              <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>Actions</th>
+              <th>Company</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style={{ width: 120 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -229,12 +219,12 @@ export default function Applications() {
               <tr><td colSpan={5} style={{ padding: 12, textAlign: "center" }}>No records</td></tr>
             ) : apps.map(a => (
               <tr key={a.id!}>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{a.company}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{a.roleTitle}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{a.status}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>{a.appliedDate}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #f2f2f2" }}>
-                  <button onClick={() => handleDelete(a.id!)} disabled={loading}>Delete</button>
+                <td>{a.company}</td>
+                <td>{a.roleTitle}</td>
+                <td><span className="badge">{a.status}</span></td>
+                <td>{a.appliedDate}</td>
+                <td>
+                  <button className="btn" onClick={() => handleDelete(a.id!)} disabled={loading}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -243,15 +233,17 @@ export default function Applications() {
       </div>
 
       {/* Paginación */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
+      <div className="pager">
         <button
+          className="btn"
           disabled={loading || disabledPrev}
           onClick={() => { const p = Math.max(0, page - 1); setPage(p); refresh(p, true); }}
         >
           Prev
         </button>
-        <span>Page {page + 1} / {Math.max(1, totalPages)} — {totalElements} total</span>
+        <span className="pager__info">Page {page + 1} / {Math.max(1, totalPages)} — {totalElements} total</span>
         <button
+          className="btn"
           disabled={loading || disabledNext}
           onClick={() => { const p = page + 1; setPage(p); refresh(p, true); }}
         >
