@@ -4,6 +4,8 @@ import type { Application } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { useDebounce } from "../utils/useDebounce";
 import { buildCsv, downloadCsv, type ColumnDef } from "../utils/csv"; //  NUEVO
+// NUEVO import
+import { exportTablePdf, type PdfColumn } from "../utils/pdf";
 
 export default function Applications() {
   const { logout } = useAuth();
@@ -117,6 +119,31 @@ export default function Applications() {
     const yyyyMmDd = new Date().toISOString().slice(0, 10);
     downloadCsv(`applications_${yyyyMmDd}`, csv);
   }
+  function onExportPdf() {
+    // columnas y mapeo de valores tal como en CSV
+    const columns: PdfColumn<Application>[] = [
+      { header: "ID", accessor: r => r.id ?? "", width: 16 },
+      { header: "Company", accessor: r => r.company, width: 40 },
+      { header: "Role Title", accessor: r => r.roleTitle, width: 40 },
+      { header: "Status", accessor: r => r.status, width: 26 },
+      { header: "Applied Date", accessor: r => r.appliedDate ?? "", width: 26 },
+      { header: "Contact Email", accessor: r => r.contactEmail ?? "", width: 40 },
+      // Si la URL es larga, la recortamos para que envuelva mejor:
+      { header: "Job URL", accessor: r => (r.jobUrl ?? ""), width: 50 },
+      // Para Notes, quitamos saltos largos o dejamos que haga linebreak
+      { header: "Notes", accessor: r => (r.notes ?? ""), width: 60 },
+    ];
+
+    const yyyyMmDd = new Date().toISOString().slice(0, 10);
+    exportTablePdf<Application>({
+      rows: apps,
+      columns,
+      title: "Applications",
+      fileName: `applications_${yyyyMmDd}`,
+      landscape: true, // más columnas = mejor en horizontal
+    });
+  }
+
 
   if (!localStorage.getItem("token")) {
     return (
@@ -178,8 +205,9 @@ export default function Applications() {
 
         <button onClick={handleAdd} disabled={loading}>+ Quick add</button>
 
-        {/* 👇 NUEVO: Export CSV */}
+        {/*  NUEVO: Export CSV */}
         <button onClick={onExportCsv} disabled={loading}>Export CSV</button>
+        <button onClick={onExportPdf} disabled={loading}>Export PDF</button>
       </div>
 
       {/* Tabla */}
