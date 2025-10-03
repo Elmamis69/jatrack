@@ -120,6 +120,12 @@ export default function Applications() {
         marginBottom: 16
       }}>
         <h2>JATrack – Applications</h2>
+        <button
+          onClick={() => (window.location.href = "/kanban")}
+          style={{ fontSize: "20px", fontWeight: "bold" }}
+        >
+          Kanban
+        </button>
         <button onClick={logout}>Logout</button>
       </header>
 
@@ -144,6 +150,7 @@ export default function Applications() {
         <button onClick={toggleSort}>
           {sort === "appliedDate,desc" ? "Date ↓" : "Date ↑"}
         </button>
+
 
         <select value={size} onChange={(e) => setSize(parseInt(e.target.value, 10))}>
           <option value={5}>5 / page</option>

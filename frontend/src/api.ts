@@ -169,3 +169,15 @@ export async function searchApplications(
   }
   return data as Page<Application>;
 }
+// Listar "todo" para Kanban (soporta Page y array plano)
+export async function listAllApplications(): Promise<Application[]> {
+  const q = new URLSearchParams({ page: "0", size: "1000", sort: "appliedDate,desc" });
+  const res = await fetch(`${API_BASE}/api/applications?${q.toString()}`, {
+    headers: { ...authHeaders() },
+  });
+  if (res.status === 401) throw new Error("Unauthorized");
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.content ?? []);
+}
+
