@@ -45,6 +45,13 @@ export default function Kanban() {
     e.preventDefault(); // permitir drop
     e.dataTransfer.dropEffect = "move";
   }
+  // helper para mostrar fecha bonita
+  function fmtDate(d?: string) {
+    if (!d) return "—";
+    // si d ya viene como "2025-10-02", úsala tal cual o formatea:
+    try { return new Date(d).toLocaleDateString(); } catch { return d; }
+  }
+
 
   async function onDrop(e: React.DragEvent, newStatus: Application["status"]) {
     e.preventDefault();
@@ -132,7 +139,7 @@ export default function Kanban() {
                     <div style={{ fontWeight: 600 }}>{card.company}</div>
                     <div style={{ fontSize: 12, color: "#555" }}>{card.roleTitle}</div>
                     <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>
-                      appliedDate: card.appliedDate ?? new Date().toISOString().slice(0,10),
+                      {fmtDate(card.appliedDate ?? new Date().toISOString().slice(0, 10))}
                     </div>
                   </div>
                 ))}
