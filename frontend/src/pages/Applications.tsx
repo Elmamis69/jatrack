@@ -3,20 +3,21 @@ import { createApplication, deleteApplication, listApplications } from "../api";
 import type { Application } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { useDebounce } from "../utils/useDebounce";
+import { buildCsv, downloadCsv, type ColumnDef } from "../utils/csv"; //  NUEVO
 
 export default function Applications() {
   const { logout } = useAuth();
 
   const [apps, setApps] = useState<Application[]>([]);
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(10);                 // 👈 selector de tamaño
+  const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0); // 👈 total
+  const [totalElements, setTotalElements] = useState(0);
 
   // filtros
   const [status, setStatus] = useState<string>("");
   const [query, setQuery] = useState<string>("");
-  const debouncedQuery = useDebounce(query, 350);        // 👈 debounce
+  const debouncedQuery = useDebounce(query, 350);
   const [sort, setSort] = useState<string>("appliedDate,desc");
 
   // flag simple de carga
@@ -88,7 +89,6 @@ export default function Applications() {
     const token = localStorage.getItem("token");
     if (!token) return;
     await deleteApplication(id);
-    // si borras el último item de la última página, rebota a la anterior
     const nextPage = (apps.length === 1 && page > 0) ? page - 1 : page;
     setPage(nextPage);
     await refresh(nextPage, true);
@@ -100,6 +100,23 @@ export default function Applications() {
 
   const disabledPrev = useMemo(() => page <= 0, [page]);
   const disabledNext = useMemo(() => page >= totalPages - 1, [page, totalPages]);
+
+  // 👇 NUEVO: Export CSV de lo que el usuario está viendo (apps ya filtradas/paginadas)
+  function onExportCsv() {
+    const columns: ColumnDef<Application>[] = [
+      { header: "ID", accessor: r => r.id ?? "" },
+      { header: "Company", accessor: r => r.company },
+      { header: "Role Title", accessor: r => r.roleTitle },
+      { header: "Status", accessor: r => r.status },
+      { header: "Applied Date", accessor: r => r.appliedDate ?? "" },
+      { header: "Contact Email", accessor: r => r.contactEmail ?? "" },
+      { header: "Job URL", accessor: r => r.jobUrl ?? "" },
+      { header: "Notes", accessor: r => (r.notes ?? "").replace(/\r?\n/g, " ") },
+    ];
+    const csv = buildCsv(apps, columns);
+    const yyyyMmDd = new Date().toISOString().slice(0, 10);
+    downloadCsv(`applications_${yyyyMmDd}`, csv);
+  }
 
   if (!localStorage.getItem("token")) {
     return (
@@ -120,17 +137,19 @@ export default function Applications() {
         marginBottom: 16
       }}>
         <h2>JATrack – Applications</h2>
-        <button
-          onClick={() => (window.location.href = "/kanban")}
-          style={{ fontSize: "20px", fontWeight: "bold" }}
-        >
-          Kanban
-        </button>
-        <button onClick={logout}>Logout</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => (window.location.href = "/kanban")}
+            style={{ fontSize: "20px", fontWeight: "bold" }}
+          >
+            Kanban
+          </button>
+          <button onClick={logout}>Logout</button>
+        </div>
       </header>
 
       {/* Filtros */}
-      <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 180px 160px 120px auto", marginBottom: 12 }}>
+      <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 180px 160px 120px auto auto", marginBottom: 12 }}>
         <input
           placeholder="Search (company, role, notes…)"
           value={query}
@@ -151,7 +170,6 @@ export default function Applications() {
           {sort === "appliedDate,desc" ? "Date ↓" : "Date ↑"}
         </button>
 
-
         <select value={size} onChange={(e) => setSize(parseInt(e.target.value, 10))}>
           <option value={5}>5 / page</option>
           <option value={10}>10 / page</option>
@@ -159,6 +177,9 @@ export default function Applications() {
         </select>
 
         <button onClick={handleAdd} disabled={loading}>+ Quick add</button>
+
+        {/* 👇 NUEVO: Export CSV */}
+        <button onClick={onExportCsv} disabled={loading}>Export CSV</button>
       </div>
 
       {/* Tabla */}
