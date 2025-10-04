@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
+  Page<Application> findByUserId(Long userId, Pageable pageable);
+
+  Optional<Application> findByIdAndUserId(Long id, Long userId);
+
+  boolean existsByIdAndUserId(Long id, Long userId);
 
   @Query("""
       SELECT a FROM Application a
@@ -29,9 +34,4 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
       @Param("qp") String qp,
       Pageable pageable);
 
-  Page<Application> findByUserId(Long userId, Pageable pageable);
-
-  Optional<Application> findByIdAndUserId(Long id, Long userId);
-
-  boolean existsByIdAndUserId(Long id, Long userId);
 }

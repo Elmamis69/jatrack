@@ -2,17 +2,18 @@ package com.adrian.backend.controllers;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.adrian.backend.applications.Application;
 import com.adrian.backend.applications.ApplicationRepository;
 import com.adrian.backend.applications.ApplicationStatus;
 import com.adrian.backend.applications.PageResponse;
-
-import org.springframework.security.core.context.SecurityContextHolder;
-import com.adrian.backend.users.UserRepository;
 import com.adrian.backend.users.User;
+import com.adrian.backend.users.UserRepository;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -28,8 +29,13 @@ public class ApplicationController {
     }
 
     private User currentUser() {
-        var email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepo.findByEmail(email).orElseThrow();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authentication");
+        }
+        var email = auth.getName();
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
 
     @GetMapping
@@ -44,8 +50,8 @@ public class ApplicationController {
         var sortObj = (parts.length == 2 && "desc".equalsIgnoreCase(parts[1]))
                 ? org.springframework.data.domain.Sort.by(parts[0]).descending()
                 : org.springframework.data.domain.Sort.by(parts[0]).ascending();
-        var pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
 
+        var pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
         var user = currentUser();
 
         boolean noFilters = (status == null) && (q == null || q.isBlank());
@@ -62,7 +68,7 @@ public class ApplicationController {
     @PostMapping
     public Application create(@Valid @RequestBody Application a) {
         var user = currentUser();
-        a.setUser(user);                           // 👈 asignar dueño
+        a.setUser(user); // dueño
         return repo.save(a);
     }
 
@@ -70,8 +76,8 @@ public class ApplicationController {
     public ResponseEntity<Application> one(@PathVariable Long id) {
         var user = currentUser();
         return repo.findByIdAndUserId(id, user.getId())
-                   .map(ResponseEntity::ok)
-                   .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import com.adrian.backend.users.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDate;
 
 @Entity
@@ -12,6 +14,7 @@ public class Application {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     public User getUser() {
