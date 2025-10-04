@@ -53,7 +53,7 @@ export function exportTablePdf<T>(args: {
       if (col.width) acc[idx] = { cellWidth: col.width };
       return acc;
     }, {} as Record<number, { cellWidth: number }>),
-    didDrawPage(data) {
+    didDrawPage: () => {
       // Footer con número de página
       const pageNumber = doc.getNumberOfPages();
       const pageSize = doc.internal.pageSize;

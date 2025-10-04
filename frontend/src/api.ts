@@ -3,7 +3,7 @@
 =========================== */
 // src/api.ts
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
-
+export { API_BASE };
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("token");
