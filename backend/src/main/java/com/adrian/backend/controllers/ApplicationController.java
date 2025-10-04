@@ -10,18 +10,28 @@ import com.adrian.backend.applications.ApplicationRepository;
 import com.adrian.backend.applications.ApplicationStatus;
 import com.adrian.backend.applications.PageResponse;
 
-//import java.util.List;
-@PreAuthorize("isAuthenticated()")
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.adrian.backend.users.UserRepository;
+import com.adrian.backend.users.User;
+
 @RestController
 @RequestMapping("/api/applications")
+@PreAuthorize("isAuthenticated()")
 public class ApplicationController {
 
     private final ApplicationRepository repo;
+    private final UserRepository userRepo;
 
-    public ApplicationController(ApplicationRepository repo) {
+    public ApplicationController(ApplicationRepository repo, UserRepository userRepo) {
         this.repo = repo;
+        this.userRepo = userRepo;
     }
- 
+
+    private User currentUser() {
+        var email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepo.findByEmail(email).orElseThrow();
+    }
+
     @GetMapping
     public PageResponse<Application> search(
             @RequestParam(required = false) ApplicationStatus status,
@@ -29,41 +39,45 @@ public class ApplicationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "appliedDate,desc") String sort) {
+
         var parts = sort.split(",", 2);
         var sortObj = (parts.length == 2 && "desc".equalsIgnoreCase(parts[1]))
                 ? org.springframework.data.domain.Sort.by(parts[0]).descending()
                 : org.springframework.data.domain.Sort.by(parts[0]).ascending();
-
         var pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
 
-        // 👉 Si no hay filtros, evita la query compleja
+        var user = currentUser();
+
         boolean noFilters = (status == null) && (q == null || q.isBlank());
         if (noFilters) {
-            var pageData = repo.findAll(pageable);
+            var pageData = repo.findByUserId(user.getId(), pageable);
             return PageResponse.of(pageData);
         }
- 
-        // 👉 Pasa el patrón ya armado; si q es null no se usa, pero manda algo seguro
+
         String qp = (q == null || q.isBlank()) ? "%" : "%" + q + "%";
-        var pageData = repo.search(status, q, qp, pageable);
+        var pageData = repo.searchForUser(user.getId(), status, q, qp, pageable);
         return PageResponse.of(pageData);
     }
 
     @PostMapping
     public Application create(@Valid @RequestBody Application a) {
+        var user = currentUser();
+        a.setUser(user);                           // 👈 asignar dueño
         return repo.save(a);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Application> one(@PathVariable Long id) {
-        return repo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        var user = currentUser();
+        return repo.findByIdAndUserId(id, user.getId())
+                   .map(ResponseEntity::ok)
+                   .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Application> update(@PathVariable Long id, @Valid @RequestBody Application upd) {
-        return repo.findById(id)
+        var user = currentUser();
+        return repo.findByIdAndUserId(id, user.getId())
                 .map(a -> {
                     a.setCompany(upd.getCompany());
                     a.setRoleTitle(upd.getRoleTitle());
@@ -79,11 +93,11 @@ public class ApplicationController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!repo.existsById(id)) {
+        var user = currentUser();
+        if (!repo.existsByIdAndUserId(id, user.getId())) {
             return ResponseEntity.notFound().build();
         }
         repo.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
 }
