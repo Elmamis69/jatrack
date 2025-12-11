@@ -29,7 +29,7 @@ JATrack helps you manage your job applications, track statuses, and keep notes i
 - [x] Deploy backend (Render/Heroku) and frontend (Vercel/Netlify)
 
 
-**Author**
+## Author
 Adrián Félix
 
 Software Engineering
