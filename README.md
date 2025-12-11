@@ -15,11 +15,6 @@ JATrack helps you manage your job applications, track statuses, and keep notes i
 - **Database:** PostgreSQL
 - **Tools:** Docker, GitHub
 
-## Getting Started
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Elmamiss69/jatrack.git
-
    
 ## Roadmap
 - [x] Initialize repository with README and MIT License
@@ -33,3 +28,21 @@ JATrack helps you manage your job applications, track statuses, and keep notes i
 - [x] Export applications to CSV/PDF
 - [x] Deploy backend (Render/Heroku) and frontend (Vercel/Netlify)
 
+
+**Author**
+Adrián Félix
+
+Software Engineering
+
+Passionate about Android Developer, Full Stack and iOS development and clean architecture.
+
+GitHub: @Elmamis69
+Email: guerofelix234@gmail.com
+
+**License**
+This project is licensed under the MIT License.
+
+## Getting Started
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Elmamiss69/jatrack.git
